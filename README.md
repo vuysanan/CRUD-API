@@ -54,8 +54,6 @@ Swagger UI:
 http://localhost:3000/docs
 ```
 
-##Endpoints
-
 ## Endpoints
 
 | Method | Endpoint | Description |
