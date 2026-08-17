@@ -74,19 +74,17 @@ app.get("/tasks/:id", (req, res) => {
     res.json(formatTask(task));
 });
 
+// Stage 2: Create new tasks
+
 app.post("/tasks", (req, res) => {
     const { title } = req.body;
 
     if (!title || title.trim() === "")
         return res.status(400).json({ error: "Title is required" });
 
-    let newId;
-
-    if (tasks.length > 0) {
-        newId = tasks[tasks.length - 1].id + 1;
-    } else {
-        newId = 1;
-    }
+    const insertTask = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)");
+    const resultingTask = insertTask.run(title.trim(), 0);
+    const newId = resultingTask.lastInsertRowid;
 
     const newTask = {
         id: newId,
@@ -94,7 +92,6 @@ app.post("/tasks", (req, res) => {
         done: false
     };
 
-    tasks.push(newTask);
     res.status(201).json(newTask);
 });
 
