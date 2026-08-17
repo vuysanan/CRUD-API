@@ -20,12 +20,10 @@ db.exec(`
 
 const { count } = db.prepare("SELECT COUNT(*) as count FROM tasks").get();
 if (count === 0) {
-    db.exec(`
-        INSERT INTO tasks (id, title, done) VALUES
-            (1, "Practice JavaScript", 1),
-            (2, "Build an API", 0),
-            (3, "Watch Kaizer Chiefs", 0)
-    `);
+    const insert = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)");
+    insert.run("Practice JavaScript", 1);
+    insert.run("Build an API", 0);
+    insert.run("Watch Kaizer Chiefs", 0);
 }
 
 function formatTask(task) {
