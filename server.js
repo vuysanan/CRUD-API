@@ -1,11 +1,45 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from './openapi.json' with { type: "json" };
+import Database from "better-sqlite3";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+
+const db = new Database("tasks.db");
+
+db.exec(` 
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY,
+        title TEXT,
+        done INTEGER
+    )
+`);
+
+const { count } = db.prepare("SELECT COUNT(*) as count FROM tasks").get();
+if (count === 0) {
+    db.exec(`
+        INSERT INTO tasks (id, title, done) VALUES
+            (1, "Practice JavaScript", 1),
+            (2, "Build an API", 0),
+            (3, "Watch Kaizer Chiefs", 0)
+    `);
+}
+
+function formatTask(task) {
+    let formattedTask = {};
+    formattedTask.id = task.id;
+    formattedTask.title = task.title;
+
+    if (task.done === 1) {
+        formattedTask.done = true;
+    } else {
+        formattedTask.done = false;
+    }
+    return formattedTask;
+}
 
 const tasks = [
     { id: 1, title: "Practice JavaScript", done: true },
