@@ -39,11 +39,11 @@ function formatTask(task) {
     return formattedTask;
 }
 
-const tasks = [
+/*const tasks = [
     { id: 1, title: "Practice JavaScript", done: true },
     { id: 2, title: "Build an API", done: false },
     { id: 3, title: "Watch Kaizer Chiefs", done: false }
-];
+]; */
 
 app.get("/", (req, res) => {
     res.json({
@@ -57,17 +57,21 @@ app.get("/health", (req, res) => {
     res.json({ status: "ok" });
 });
 
+// Stage 1: Read from the database
+
 app.get("/tasks", (req, res) => {
-    res.json(tasks);
+    const tasks = db.prepare("SELECT * FROM tasks").all();
+    res.json(tasks.map(formatTask));
 });
 
 app.get("/tasks/:id", (req, res) => {
     const taskId = parseInt(req.params.id);
-    const task = tasks.find(t => t.id === taskId);
+
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
     if (!task) {
         return res.status(404).json({ error: `Task ${taskId} not found` });
     }
-    res.json(task);
+    res.json(formatTask(task));
 });
 
 app.post("/tasks", (req, res) => {
