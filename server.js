@@ -95,9 +95,11 @@ app.post("/tasks", (req, res) => {
     res.status(201).json(newTask);
 });
 
+// Stage 3: Update and delete
+
 app.put("/tasks/:id", (req, res) => {
     const taskId = parseInt(req.params.id);
-    const task = tasks.find(t => t.id === taskId);
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
 
     if (!task) {
         return res.status(404).json({ error: `Task ${taskId} not found` });
@@ -109,29 +111,34 @@ app.put("/tasks/:id", (req, res) => {
         return res.status(400).json({ error: "At least one field is required" });
     }
 
+    let newTitle = task.title;
+    let newDone = task.done;
+
     if (title !== undefined) {
         if (typeof title !== "string" || title.trim() === "") {
             return res.status(400).json({ error: "Title must be a non-empty string" });
         }
-        task.title = title.trim();
+        newTitle = title.trim();
     }
 
     if (done !== undefined) {
-        task.done = Boolean(done);
+        newDone = done ? 1 : 0;
     }
 
-    res.json(task);
+    db.prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?").run(newTitle, newDone, taskId);
+
+    res.json(formatTask({ id: taskId, title: newTitle, done: newDone }));
 });
 
 app.delete("/tasks/:id", (req, res) => {
     const taskId = parseInt(req.params.id);
-    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
 
-    if (taskIndex === -1) {
+    if (!task) {
         return res.status(404).json({ error: `Task ${taskId} not found` });
     }
 
-    tasks.splice(taskIndex, 1);
+    db.prepare("DELETE FROM tasks WHERE id = ?").run(taskId);
     res.sendStatus(204);
 });
 
