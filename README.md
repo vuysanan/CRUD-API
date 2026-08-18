@@ -11,12 +11,14 @@ A CRUD (Create, Read, Update, Delete) REST API built with **Node.js + Express** 
 - Delete tasks
 - Input validation
 - Interactive Swagger UI documentation
+- Data persistence: Tasks survive server restarts using SQLite database
 
 ## Technologies
 
 - Node.js
 - Express.js
 - Swagger UI (OpenAPI 3.0)
+- SQLite (via better-sqlite3)
 
 ## Installation
 
@@ -95,3 +97,23 @@ content-type: application/json
 ## Swagger UI
 
 <img src="images/swagger.png" alt="App overview" width="1000">
+
+## Connecting a Database
+
+### Why SQLite
+* I chose SQLite because it is a serverless, zero setup database that lives in a single file, allowing my task data to survive server restarts.
+
+### Where the data lives
+* The data is stored in a file called tasks.db. This file is git-ignored and will be created automatically the first time you run the server.
+
+### SQL Query Example (Stage 4)
+
+``` sql
+UPDATE tasks SET done = 1;
+```
+
+* This query sets the completion status of all the tasks to 1 which represents True meaning they are all done
+
+<img src="images/tasks.png" alt="Tasks on SQLite" width="1000">
+<img src="images/update1.png alt="Update Query on SQLite" width="1000">
+<img src="images/update2.png alt="Updated Tasks on SQLite" width="1000">
