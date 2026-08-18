@@ -115,5 +115,5 @@ UPDATE tasks SET done = 1;
 * This query sets the completion status of all the tasks to 1 which represents True meaning they are all done
 
 <img src="images/tasks.png" alt="Tasks on SQLite" width="1000">
-<img src="images/update1.png alt="Update Query on SQLite" width="1000">
-<img src="images/update2.png alt="Updated Tasks on SQLite" width="1000">
+<img src="images/update1.png" alt="Update Query on SQLite" width="1000">
+<img src="images/update2.png" alt="Updated Tasks on SQLite" width="1000">
