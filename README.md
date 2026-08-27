@@ -20,6 +20,8 @@ A CRUD (Create, Read, Update, Delete) REST API built with **Node.js + Express** 
 - Swagger UI (OpenAPI 3.0)
 - SQLite (via better-sqlite3)
 
+# Assignmnent 1
+
 ## Installation
 
 1. Clone the repository
@@ -98,6 +100,8 @@ content-type: application/json
 
 <img src="images/swagger.png" alt="App overview" width="1000">
 
+# Assignment 2
+
 ## Connecting a Database
 
 ### Why SQLite
@@ -117,3 +121,15 @@ UPDATE tasks SET done = 1;
 <img src="images/tasks.png" alt="Tasks on SQLite" width="1000">
 <img src="images/update1.png" alt="Update Query on SQLite" width="1000">
 <img src="images/update2.png" alt="Updated Tasks on SQLite" width="1000">
+
+
+# Assignment 3 - Containerize your stack
+
+* Goal: Run your task API against a real Postgres database in Docker — then start your whole app and its database with one command.
+
+### Running Postgres locally (Stage 0)
+
+* The database runs in a Docker container using PostgreSQL version 16. To start the database server, run:
+
+```bash
+docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
