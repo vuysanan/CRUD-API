@@ -1,14 +1,43 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from './openapi.json' with { type: "json" };
-import Database from "better-sqlite3";
+import 'dotenv/config';
+import pkg from 'pg'
+const { Pool } = pkg;
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
 
-const db = new Database("tasks.db");
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+})
+
+async function initializeDatabase(){
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS tasks (
+            id SERIAL PRIMARY KEY,
+            title TEXT,
+            done BOOLEAN)
+        `);
+
+        const result = await pool.query("SELECT COUNT(*) as count FROM tasks");
+        if (parseInt(result.rows[0].count) === 0) {
+            await pool.query("INSERT INTO tasks (title, done) VALUES ($1, $2)", ["Practice JavaScript", true]);
+            await pool.query("INSERT INTO tasks (title, done) VALUES ($1, $2)", ["Build an API", true]);
+            await pool.query("INSERT INTO tasks (title, done) VALUES ($1, $2)", ["Watch Kaizer Chiefs", false]);
+            console.log("Database seeded with tasks.");
+        }
+    } catch (err) {
+        console.error("Database initialization error:", err);
+    }
+}
+
+initializeDatabase();
+
+/* Here lies the remains of assignment 2
 
 db.exec(` 
     CREATE TABLE IF NOT EXISTS tasks (
@@ -37,13 +66,7 @@ function formatTask(task) {
         formattedTask.done = false;
     }
     return formattedTask;
-}
-
-/*const tasks = [
-    { id: 1, title: "Practice JavaScript", done: true },
-    { id: 2, title: "Build an API", done: false },
-    { id: 3, title: "Watch Kaizer Chiefs", done: false }
-]; */
+} */
 
 app.get("/", (req, res) => {
     res.json({
