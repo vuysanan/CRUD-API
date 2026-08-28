@@ -105,72 +105,81 @@ app.get("/tasks/:id", async (req, res) => {
     }
 });
 
-// Stage 2: Create new tasks
+// Create new tasks
 
-app.post("/tasks", (req, res) => {
-    const { title } = req.body;
+app.post("/tasks", async (req, res) => {
+    try  {
+        const { title } = req.body;
 
-    if (!title || title.trim() === "")
-        return res.status(400).json({ error: "Title is required" });
+        if (!title || title.trim() === "")
+            return res.status(400).json({ error: "Title is required" });
 
-    const insertTask = db.prepare("INSERT INTO tasks (title, done) VALUES (?, ?)");
-    const resultingTask = insertTask.run(title.trim(), 0);
-    const newId = resultingTask.lastInsertRowid;
+        const result = await pool.query("INSERT INTO tasks (title, done) VALUES ($1, $2) RETURNING *", [title.trim(), false]);
 
-    const newTask = {
-        id: newId,
-        title: title.trim(),
-        done: false
-    };
-
-    res.status(201).json(newTask);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Stage 3: Update and delete
 
-app.put("/tasks/:id", (req, res) => {
-    const taskId = parseInt(req.params.id);
-    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
+app.put("/tasks/:id", async (req, res) => {
+    try {
+        const taskId = parseInt(req.params.id);
+        const result = await pool.query("SELECT * FROM tasks WHERE id = $1", [taskId]);
 
-    if (!task) {
-        return res.status(404).json({ error: `Task ${taskId} not found` });
-    }
-
-    const { title, done } = req.body;
-
-    if (title === undefined && done === undefined) {
-        return res.status(400).json({ error: "At least one field is required" });
-    }
-
-    let newTitle = task.title;
-    let newDone = task.done;
-
-    if (title !== undefined) {
-        if (typeof title !== "string" || title.trim() === "") {
-            return res.status(400).json({ error: "Title must be a non-empty string" });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: `Task ${taskId} not found` });
         }
-        newTitle = title.trim();
+
+        const task = result.rows[0];
+        const { title, done } = req.body;
+
+        if (title === undefined && done === undefined) {
+            return res.status(400).json({ error: "At least one field is required" });
+        }
+
+        let newTitle = task.title;
+        let newDone = task.done;
+
+        if (title !== undefined) {
+            if (typeof title !== "string" || title.trim() === "") {
+                return res.status(400).json({ error: "Title must be a non-empty string" });
+            }
+            newTitle = title.trim();
+        }
+
+        if (done !== undefined) {
+            if (typeof done !== "boolean") {
+                return res.status(400).json({ error: "Done must be a boolean" });
+            }
+
+            newDone = done;
+        }
+
+        const updateRes = await pool.query("UPDATE tasks SET title = $1, done = $2 WHERE id = $3 RETURNING *", [newTitle, newDone, taskId]);
+
+        res.json(updateRes.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    if (done !== undefined) {
-        newDone = done ? 1 : 0;
-    }
-
-    db.prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?").run(newTitle, newDone, taskId);
-
-    res.json(formatTask({ id: taskId, title: newTitle, done: newDone }));
 });
 
-app.delete("/tasks/:id", (req, res) => {
-    const taskId = parseInt(req.params.id);
-    const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
+app.delete("/tasks/:id", async (req, res) => {
+    try {
+        const taskId = parseInt(req.params.id);
+        const result = await pool.query("SELECT * FROM tasks WHERE id = $1", [taskId]);
 
-    if (!task) {
-        return res.status(404).json({ error: `Task ${taskId} not found` });
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: `Task ${taskId} not found` });
+        }
+
+        await pool.query("DELETE FROM tasks WHERE id = $1", [taskId]);
+        res.sendStatus(204);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    db.prepare("DELETE FROM tasks WHERE id = ?").run(taskId);
-    res.sendStatus(204);
 });
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
