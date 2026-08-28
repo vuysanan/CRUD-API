@@ -11,14 +11,15 @@ A CRUD (Create, Read, Update, Delete) REST API built with **Node.js + Express** 
 - Delete tasks
 - Input validation
 - Interactive Swagger UI documentation
-- Data persistence: Tasks survive server restarts using SQLite database
+- Data persistence
 
 ## Technologies
 
 - Node.js
 - Express.js
 - Swagger UI (OpenAPI 3.0)
-- SQLite (via better-sqlite3)
+- PostgresSQL
+- Docker
 
 # Assignmnent 1
 
@@ -76,7 +77,7 @@ http://localhost:3000/docs
 curl -i http://localhost:3000/tasks
 ```
 
-Example output
+Output
 
 ```http
 HTTP/1.1 200 OK
@@ -125,11 +126,84 @@ UPDATE tasks SET done = 1;
 
 # Assignment 3 - Containerize your stack
 
-* Goal: Run your task API against a real Postgres database in Docker — then start your whole app and its database with one command.
+* Goal: Run the task API against a real Postgres database in Docker — then start the whole app and its database with one command.
 
-### Running Postgres locally (Stage 0)
+## Running Postgres locally (Stage 0)
 
 * The database runs in a Docker container using PostgreSQL version 16. To start the database server, run:
 
 ```bash
 docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
+```
+
+## Installation & Running Locally
+
+* This API and its PostgreSQL database are containerized using Docker. You can start the entire stack with a single command.
+
+1. Clone the repository:
+```bash
+git clone https://github.com/vuysanan/CRUD-API.git
+```
+
+2. Navigate to the project
+```bash
+cd CRUD-API
+```
+
+3. Setup environment variables by copying the example file
+```bash
+cp .env.example .env
+```
+
+4. Start the application and database
+```bash
+docker compose up
+```
+The API will be available at http://localhost:3000 and the Swagger UI at http://localhost:3000/docs
+
+## Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | / | API information |
+| GET | /health | Health check |
+| GET | /tasks | Get all tasks |
+| GET | /tasks/{id} | Get a task by ID |
+| POST | /tasks | Create a new task |
+| PUT | /tasks/{id} | Update a task |
+| DELETE | /tasks/{id} | Delete a task |
+
+## Example curl request
+
+```bash
+curl -i http://localhost:3000/tasks
+```
+
+Output
+
+```http
+HTTP/1.1 200 OK
+content-type: application/json; charset=utf-8
+
+[
+  {
+    "id": 1,
+    "title": "Practice JavaScript",
+    "done": true
+  },
+  {
+    "id": 2,
+    "title": "Build an API",
+    "done": true
+  },
+  {
+    "id": 3,
+    "title": "Watch Kaizer Chiefs",
+    "done": true
+  }
+]
+```
+## Screenshots
+
+<img src="images/dt.png" alt="Table" width="1000">
+<img src="images/selectAll.png" alt="Select all tasks" width="1000">
